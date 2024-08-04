@@ -16,6 +16,7 @@ video.set(4, 1500)
 # Load and resize brush images
 img_1 = cv2.imread('images/brush_1.png', -1)
 img_2 = cv2.imread('images/brush_2.png', -1)
+img_3 = cv2.imread('images/image.webp',-1)
 brush_1 = cv2.resize(img_1, (100, 100), interpolation=cv2.INTER_AREA)
 brush_2 = cv2.resize(img_2, (100, 100), interpolation=cv2.INTER_AREA)
 
@@ -68,19 +69,23 @@ def start_game():
     start_time = time.time()
 
 while True:
+    
     ret, image = video.read()
     image = cv2.flip(image, 1)
+    canvas_resized = cv2.resize(canvas, (image.shape[1], image.shape[0]))
     # image[:,:] = (0,0,0)
     rgbimg = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     result = hands.process(rgbimg)
+    img_resized = cv2.resize(img_3, (image.shape[1], image.shape[0]))
+    image = cv2.addWeighted(image, 0.1, img_resized, 0.9, 0)
     if game_started:
         elapsed_time = time.time() - start_time
         if elapsed_time < 3:
             countdown = int(3 - elapsed_time)
-            cv2.putText(image, str(countdown), (500, 400), cv2.FONT_HERSHEY_SIMPLEX, 6, (0, 255, 0), 15)
+            cv2.putText(canvas_resized, str(countdown), (500, 400), cv2.FONT_HERSHEY_SIMPLEX, 6, (0, 255, 0), 15)
         elif elapsed_time < 18:
             result_text = f"Time: {19-int(elapsed_time)}"
-            cv2.putText(image, result_text, (500,50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 0, 255), 5) 
+            cv2.putText(canvas_resized, result_text, (500,50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 0, 255), 5) 
             if result.multi_hand_landmarks:
                 for idx, hand in enumerate(result.multi_hand_landmarks):
                     mpDraw.draw_landmarks(image, hand, mpHands.HAND_CONNECTIONS)
@@ -106,7 +111,7 @@ while True:
             blue_pixels = np.sum(np.all(roi_canvas == [255, 0, 0], axis=-1))
             winner = "Red" if red_pixels > blue_pixels else "Blue"
             result_text = f"Winner: {winner}" 
-            cv2.putText(image, result_text, (start_button_x1 + 11, start_button_y1 + 600), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 5) 
+            cv2.putText(canvas_resized, result_text, (start_button_x1 + 11, start_button_y1 + 600), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 5) 
             if(elapsed_time>25):
                 canvas = np.zeros((780, 1000, 3), dtype=np.uint8)  # Reset canvas for the next game
                 canvas[roi_y1+5:roi_y2+50, roi_x1-5:roi_x2-200] = (255, 255, 255)  # Set ROI to white
@@ -116,24 +121,24 @@ while True:
         red_pixels = np.sum(np.all(roi_canvas == [0, 0, 255], axis=-1))/1000
         blue_pixels = np.sum(np.all(roi_canvas == [255, 0, 0], axis=-1))/1000
         result_text = f"Red: {red_pixels} "
-        cv2.putText(image, result_text, (start_button_x1 + 15, start_button_y1 + 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 5)
+        cv2.putText(canvas_resized, result_text, (start_button_x1 + 15, start_button_y1 + 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 5)
         result_text = f"Blue: {blue_pixels}"
-        cv2.putText(image, result_text, (start_button_x1 + 13, start_button_y1 + 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 5)
+        cv2.putText(canvas_resized, result_text, (start_button_x1 + 13, start_button_y1 + 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 5)
         
     else:
         # Draw the start button
         start_button_x1, start_button_y1 = image.shape[1] - 300, 50
         start_button_x2, start_button_y2 = image.shape[1] - 50, 150
-        cv2.rectangle(image, (start_button_x1, start_button_y1), (start_button_x2, start_button_y2), (255, 0, 0), -1)
-        cv2.putText(image, "Start", (start_button_x1 + 30, start_button_y1 + 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 5)
+        cv2.rectangle(canvas_resized, (start_button_x1, start_button_y1), (start_button_x2, start_button_y2), (255, 0, 0), -1)
+        cv2.putText(canvas_resized, "Start", (start_button_x1 + 30, start_button_y1 + 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 5)
         
         
         if cv2.waitKey(1) & 0xFF == ord('s'):
             start_game()
 
     # Reduce the opacity of the background
-    canvas_resized = cv2.resize(canvas, (image.shape[1], image.shape[0]))
-    image = cv2.addWeighted(image, 0.5, canvas_resized, 0.8, 0)
+    # canvas_resized = cv2.resize(canvas, (image.shape[1], image.shape[0]))
+    image = cv2.addWeighted(image, 0.1, canvas_resized, 0.9, 0)
 
     # Draw the ROI on the image
     cv2.rectangle(image, (roi_x1, roi_y1), (roi_x2, roi_y2), (0, 255, 0), 50)
