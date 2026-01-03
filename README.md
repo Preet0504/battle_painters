@@ -52,13 +52,6 @@ Two players compete by painting inside a fixed **Region of Interest (ROI)** usin
 
 ---
 
-## 📹 Demo
-
-👉 Add a demo video or GIF here  
-(Strongly recommended for portfolio visibility)
-
----
-
 ## 🚀 Setup Instructions
 
 ### 1. Clone the repository
